@@ -60,6 +60,27 @@ function doPost(e) {
     return createResponse({ success: true });
   }
 
+  if (action === 'deleteTransaction') {
+    const sheet = ss.getSheetByName('Transactions');
+    if (!sheet) return createResponse({ error: 'Sheet not found' });
+    const dataRange = sheet.getDataRange();
+    const values = dataRange.getValues();
+    
+    // Find row by matching all fields (as a unique identifier)
+    for (let i = 1; i < values.length; i++) {
+      const row = values[i];
+      if (new Date(row[0]).getTime() === new Date(data.date).getTime() && 
+          row[1] === data.category && 
+          row[2] == data.amount && 
+          row[3] === data.type &&
+          row[6] === data.notes) {
+        sheet.deleteRow(i + 1);
+        return createResponse({ success: true });
+      }
+    }
+    return createResponse({ error: 'Transaction not found' });
+  }
+
   return createResponse({ error: 'Invalid action' });
 }
 

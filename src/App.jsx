@@ -37,6 +37,13 @@ const API = {
       body: JSON.stringify({ action: 'addCategory', category })
     });
     return res.json();
+  },
+  deleteTransaction: async (tx) => {
+    const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'deleteTransaction', ...tx })
+    });
+    return res.json();
   }
 };
 
@@ -116,6 +123,17 @@ function App() {
       await loadData();
     } catch (err) {
       alert('Failed to add category');
+    }
+  };
+
+  const handleDeleteTransaction = async (tx) => {
+    try {
+      setLoading(true);
+      await API.deleteTransaction(tx);
+      await loadData();
+    } catch (err) {
+      alert('Failed to delete transaction');
+      setLoading(false);
     }
   };
 
@@ -209,7 +227,7 @@ function App() {
                 </div>
                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">{stat.label}</h3>
               </div>
-              <p className="text-3xl font-black">${stat.val.toLocaleString()}</p>
+              <p className="text-3xl font-black">₹{stat.val.toLocaleString('en-IN')}</p>
             </div>
           ))}
 
@@ -224,11 +242,11 @@ function App() {
             <div className="flex justify-between items-end relative z-10">
               <div>
                 <p className="text-xs text-blue-100 opacity-80 mb-1">Total Spent</p>
-                <p className="text-2xl font-black">${totals.groupTotal.toLocaleString()}</p>
+                <p className="text-2xl font-black">₹{totals.groupTotal.toLocaleString('en-IN')}</p>
               </div>
               <div className="text-right">
                 <p className="text-xs text-blue-100 opacity-80 mb-1">My Share</p>
-                <p className="text-2xl font-black">${totals.groupShare.toLocaleString()}</p>
+                <p className="text-2xl font-black">₹{totals.groupShare.toLocaleString('en-IN')}</p>
               </div>
             </div>
           </div>
@@ -274,7 +292,11 @@ function App() {
 
         {/* Data Table */}
         <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-          <TransactionTable transactions={filteredTransactions} loading={loading} />
+          <TransactionTable 
+            transactions={filteredTransactions} 
+            loading={loading} 
+            onDelete={handleDeleteTransaction}
+          />
         </div>
       </main>
 
