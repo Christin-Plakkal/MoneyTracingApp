@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://Christin-Plakkal.github.io/MoneyTrackingWeb",
+  "homepage": "https://christin-plakkal.github.io/MoneyTracingApp/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
