@@ -66,14 +66,18 @@ function doPost(e) {
     const dataRange = sheet.getDataRange();
     const values = dataRange.getValues();
     
-    // Find row by matching all fields (as a unique identifier)
+    // Note: Transaction objects from getTransactions have capitalized keys matching headers
+    const targetDateStr = new Date(data.Date).toDateString();
+    
     for (let i = 1; i < values.length; i++) {
       const row = values[i];
-      if (new Date(row[0]).getTime() === new Date(data.date).getTime() && 
-          row[1] === data.category && 
-          row[2] == data.amount && 
-          row[3] === data.type &&
-          row[6] === data.notes) {
+      const rowDateStr = new Date(row[0]).toDateString();
+      
+      if (rowDateStr === targetDateStr && 
+          row[1] === data.Category && 
+          parseFloat(row[2]) == parseFloat(data.Amount) && 
+          row[3] === data.Type &&
+          (row[6] || '') === (data.Notes || '')) {
         sheet.deleteRow(i + 1);
         return createResponse({ success: true });
       }
