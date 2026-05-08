@@ -1,7 +1,7 @@
 import React from 'react';
 import { Trash2, Edit } from 'lucide-react';
 
-export default function TransactionTable({ transactions, loading, onDelete }) {
+export default function TransactionTable({ transactions, loading, onDelete, onEdit }) {
   if (loading) {
     return (
       <div className="p-8 text-center text-gray-500">
@@ -50,6 +50,7 @@ export default function TransactionTable({ transactions, loading, onDelete }) {
                 <span className={`px-2 py-1 rounded-full text-xs font-bold ${
                   tx.Type === 'Income' ? 'bg-green-100 text-green-700' : 
                   tx.Type === 'Expense' ? 'bg-red-100 text-red-700' : 
+                  tx.Type === 'Credit Card Expense' ? 'bg-orange-100 text-orange-700' :
                   'bg-purple-100 text-purple-700'
                 }`}>
                   {tx.Type}
@@ -66,7 +67,14 @@ export default function TransactionTable({ transactions, loading, onDelete }) {
               <td className="px-6 py-4 text-gray-500 text-sm max-w-xs truncate">
                 {tx.Notes}
               </td>
-              <td className="px-6 py-4 text-right">
+              <td className="px-6 py-4 text-right flex justify-end gap-2">
+                <button 
+                  onClick={() => onEdit(tx)}
+                  className="p-2 text-slate-300 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-all"
+                  title="Edit"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
                 <button 
                   onClick={() => {
                     if(window.confirm('Delete this transaction?')) {
@@ -74,6 +82,7 @@ export default function TransactionTable({ transactions, loading, onDelete }) {
                     }
                   }}
                   className="p-2 text-slate-300 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all"
+                  title="Delete"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

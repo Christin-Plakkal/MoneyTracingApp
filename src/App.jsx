@@ -9,7 +9,8 @@ import {
   Heart, 
   Users,
   PlusCircle,
-  RefreshCw
+  RefreshCw,
+  CreditCard
 } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
 import TransactionTable from './components/TransactionTable';
@@ -38,6 +39,13 @@ const API = {
     });
     return res.json();
   },
+  updateTransaction: async (oldData, newData) => {
+    const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'updateTransaction', oldData, newData })
+    });
+    return res.json();
+  },
   deleteTransaction: async (tx) => {
     const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
       method: 'POST',
@@ -54,6 +62,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
 
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
@@ -110,11 +119,24 @@ function App() {
 
   const handleSaveTransaction = async (data) => {
     try {
-      await API.addTransaction(data);
+      setLoading(true);
+      if (editingTransaction) {
+        await API.updateTransaction(editingTransaction, data);
+      } else {
+        await API.addTransaction(data);
+      }
       await loadData();
+      setEditingTransaction(null);
     } catch (err) {
       alert('Failed to save transaction');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleEdit = (tx) => {
+    setEditingTransaction(tx);
+    setIsModalOpen(true);
   };
 
   const handleAddCategory = async (category) => {
@@ -178,13 +200,14 @@ function App() {
     if (tx.Type === 'Income') acc.income += amt;
     else if (tx.Type === 'Expense') acc.expense += amt;
     else if (tx.Type === 'Charity') acc.charity += amt;
+    else if (tx.Type === 'Credit Card Expense') acc.creditCard += amt;
     
     if (tx.GroupPayment === 'Y') {
       acc.groupTotal += amt;
       acc.groupShare += share;
     }
     return acc;
-  }, { income: 0, expense: 0, charity: 0, groupTotal: 0, groupShare: 0 });
+  }, { income: 0, expense: 0, charity: 0, creditCard: 0, groupTotal: 0, groupShare: 0 });
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
@@ -214,10 +237,11 @@ function App() {
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-10">
           {[
             { label: 'Total Income', val: totals.income, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
             { label: 'Total Spent', val: totals.expense, icon: LogOut, color: 'text-rose-600', bg: 'bg-rose-50', rotate: 'rotate-90' },
+            { label: 'Credit Card', val: totals.creditCard, icon: CreditCard, color: 'text-orange-600', bg: 'bg-orange-50' },
             { label: 'Charity Giving', val: totals.charity, icon: Heart, color: 'text-purple-600', bg: 'bg-purple-50' },
           ].map((stat, i) => (
             <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
@@ -296,16 +320,21 @@ function App() {
             transactions={filteredTransactions} 
             loading={loading} 
             onDelete={handleDeleteTransaction}
+            onEdit={handleEdit}
           />
         </div>
       </main>
 
       <TransactionModal 
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingTransaction(null);
+        }}
         categories={categories}
         onSave={handleSaveTransaction}
         onAddCategory={handleAddCategory}
+        editingTransaction={editingTransaction}
       />
     </div>
   );

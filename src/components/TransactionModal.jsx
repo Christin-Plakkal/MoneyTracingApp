@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Plus } from 'lucide-react';
 
-export default function TransactionModal({ isOpen, onClose, categories, onSave, onAddCategory }) {
+export default function TransactionModal({ isOpen, onClose, categories, onSave, onAddCategory, editingTransaction }) {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     category: '',
@@ -11,6 +11,30 @@ export default function TransactionModal({ isOpen, onClose, categories, onSave, 
     myShare: '',
     notes: ''
   });
+
+  useEffect(() => {
+    if (editingTransaction) {
+      setFormData({
+        date: new Date(editingTransaction.Date).toISOString().split('T')[0],
+        category: editingTransaction.Category || '',
+        amount: editingTransaction.Amount || '',
+        type: editingTransaction.Type || 'Expense',
+        groupPayment: editingTransaction.GroupPayment || 'N',
+        myShare: editingTransaction.MyShare || '',
+        notes: editingTransaction.Notes || ''
+      });
+    } else {
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        category: '',
+        amount: '',
+        type: 'Expense',
+        groupPayment: 'N',
+        myShare: '',
+        notes: ''
+      });
+    }
+  }, [editingTransaction, isOpen]);
   const [newCat, setNewCat] = useState('');
   const [showAddCat, setShowAddCat] = useState(false);
 
@@ -34,7 +58,7 @@ export default function TransactionModal({ isOpen, onClose, categories, onSave, 
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
         <div className="px-6 py-4 border-b flex items-center justify-between">
-          <h2 className="text-xl font-bold">Add Transaction</h2>
+          <h2 className="text-xl font-bold">{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full">
             <X className="w-5 h-5" />
           </button>
@@ -62,6 +86,7 @@ export default function TransactionModal({ isOpen, onClose, categories, onSave, 
                 <option value="Expense">Expense</option>
                 <option value="Income">Income</option>
                 <option value="Charity">Charity</option>
+                <option value="Credit Card Expense">Credit Card Expense</option>
               </select>
             </div>
           </div>
@@ -160,7 +185,7 @@ export default function TransactionModal({ isOpen, onClose, categories, onSave, 
             type="submit"
             className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors mt-4"
           >
-            Save Transaction
+            {editingTransaction ? 'Update Transaction' : 'Save Transaction'}
           </button>
         </form>
       </div>

@@ -66,7 +66,6 @@ function doPost(e) {
     const dataRange = sheet.getDataRange();
     const values = dataRange.getValues();
     
-    // Note: Transaction objects from getTransactions have capitalized keys matching headers
     const targetDateStr = new Date(data.Date).toDateString();
     
     for (let i = 1; i < values.length; i++) {
@@ -75,10 +74,49 @@ function doPost(e) {
       
       if (rowDateStr === targetDateStr && 
           row[1] === data.Category && 
-          parseFloat(row[2]) == parseFloat(data.Amount) && 
+          Math.abs(parseFloat(row[2]) - parseFloat(data.Amount)) < 0.01 && 
           row[3] === data.Type &&
-          (row[6] || '') === (data.Notes || '')) {
+          (row[4] || 'N') === (data.GroupPayment || 'N') &&
+          Math.abs(parseFloat(row[5] || 0) - parseFloat(data.MyShare || 0)) < 0.01 &&
+          (row[6] || '').trim() === (data.Notes || '').trim()) {
         sheet.deleteRow(i + 1);
+        return createResponse({ success: true });
+      }
+    }
+    return createResponse({ error: 'Transaction not found' });
+  }
+
+  if (action === 'updateTransaction') {
+    const sheet = ss.getSheetByName('Transactions');
+    if (!sheet) return createResponse({ error: 'Sheet not found' });
+    const dataRange = sheet.getDataRange();
+    const values = dataRange.getValues();
+    
+    const oldData = data.oldData;
+    const newData = data.newData;
+    const targetDateStr = new Date(oldData.Date).toDateString();
+    
+    for (let i = 1; i < values.length; i++) {
+      const row = values[i];
+      const rowDateStr = new Date(row[0]).toDateString();
+      
+      if (rowDateStr === targetDateStr && 
+          row[1] === oldData.Category && 
+          Math.abs(parseFloat(row[2]) - parseFloat(oldData.Amount)) < 0.01 && 
+          row[3] === oldData.Type &&
+          (row[4] || 'N') === (oldData.GroupPayment || 'N') &&
+          Math.abs(parseFloat(row[5] || 0) - parseFloat(oldData.MyShare || 0)) < 0.01 &&
+          (row[6] || '').trim() === (oldData.Notes || '').trim()) {
+        
+        sheet.getRange(i + 1, 1, 1, 7).setValues([[
+          newData.date,
+          newData.category,
+          newData.amount,
+          newData.type,
+          newData.groupPayment,
+          newData.myShare,
+          newData.notes
+        ]]);
         return createResponse({ success: true });
       }
     }
